@@ -1,0 +1,46 @@
+{
+  "name": "fuel-economy-api",
+  "version": "0.0.0",
+  "description": "Fuel Economy API",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "dev": "nodemon src/index.ts",
+    "format": "prettier --write .",
+    "postinstall": "npx simple-git-hooks",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "nodemonConfig": {
+    "ts": "ts-node",
+    "watch": [
+      "src"
+    ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx nano-staged"
+  },
+  "nano-staged": {
+    "*.{js,ts,json}": "prettier --write"
+  },
+  "dependencies": {
+    "fastify": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "nano-staged": "^0.8.0",
+    "nodemon": "^3.1.10",
+    "prettier": "3.6.2",
+    "prettier-plugin-packagejson": "^2.5.19",
+    "simple-git-hooks": "^2.13.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=24"
+  }
+}
