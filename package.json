@@ -14,20 +14,24 @@
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "nodemonConfig": {
-    "ts": "ts-node",
-    "watch": [
-      "src"
-    ]
-  },
   "simple-git-hooks": {
     "pre-commit": "npx nano-staged"
   },
   "nano-staged": {
     "*.{js,ts,json}": "prettier --write"
   },
+  "nodemonConfig": {
+    "ts": "ts-node",
+    "watch": [
+      "src",
+      ".env"
+    ]
+  },
   "dependencies": {
-    "fastify": "^5.4.0"
+    "dotenv": "^17.2.1",
+    "fastify": "^5.4.0",
+    "pino": "^9.7.0",
+    "pino-pretty": "7.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
