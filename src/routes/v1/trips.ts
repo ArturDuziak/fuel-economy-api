@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import { InMemoryDatabase } from '../../db/in-memory';
 import { List } from '../../schemas/trips';
 
 const routeBaseSchema = {
@@ -7,8 +6,6 @@ const routeBaseSchema = {
 };
 
 async function tripsRoutes(server: FastifyInstance) {
-  const db = new InMemoryDatabase();
-
   server.get<{ Querystring: { userId: string } }>(
     '/list',
     {
@@ -27,7 +24,7 @@ async function tripsRoutes(server: FastifyInstance) {
       },
     },
     async (req, res) => {
-      const trips = await db.getTrips(req.query.userId);
+      const trips = await server.db.getTrips(req.query.userId);
 
       return res.send(trips);
     },

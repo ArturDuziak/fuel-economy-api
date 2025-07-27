@@ -1,5 +1,7 @@
+import fp from 'fastify-plugin';
 import { Trip } from './types/trips';
-import { DatabaseInterface } from './interfaces';
+import { DatabaseInterface, PluginName } from './interfaces';
+import { FastifyInstance } from 'fastify';
 
 export class InMemoryDatabase implements DatabaseInterface {
   private trips: Record<string, Trip[]> = {
@@ -28,3 +30,12 @@ export class InMemoryDatabase implements DatabaseInterface {
     return this.trips[userId] ?? [];
   }
 }
+
+export default fp(
+  async (server: FastifyInstance) => {
+    server.decorate(PluginName, new InMemoryDatabase());
+  },
+  {
+    name: PluginName,
+  },
+);
