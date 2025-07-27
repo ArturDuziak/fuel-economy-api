@@ -1,36 +1,63 @@
 import { FastifyInstance } from 'fastify';
-import { List } from '../../schemas/trips';
+import { z } from 'zod';
+import zodToJsonSchema from 'zod-to-json-schema';
+import { List, Add } from '../../schemas/trips';
 
 const routeBaseSchema = {
   tags: ['Trips'],
 };
 
+const UserIdParamsSchema = zodToJsonSchema(
+  z.object({
+    userId: z.string().uuid(),
+  }),
+);
+
 async function tripsRoutes(server: FastifyInstance) {
-  server.get<{ Querystring: { userId: string } }>(
+  server.get<{ Params: { userId: string } }>(
     '/list',
     {
       schema: {
         ...routeBaseSchema,
-        querystring: {
-          type: 'object',
-          properties: {
-            userId: {
-              type: 'string',
-            },
-          },
-          required: ['userId'],
-        },
+        params: UserIdParamsSchema,
         response: { 200: List.ResponseJsonSchema },
       },
     },
     async (req, res) => {
-      const trips = await server.db.getTrips(req.query.userId);
+      const { userId } = req.params;
+
+      const trips = await server.db.getTrips(userId);
 
       return res.send(trips);
+    },
+  );
+
+  server.post<{ Body: Add.Request; Params: { userId: string } }>(
+    '/add',
+    {
+      schema: {
+        ...routeBaseSchema,
+        params: UserIdParamsSchema,
+        body: Add.RequestJsonSchema,
+        response: { 201: Add.ResponseJsonSchema },
+      },
+    },
+    async (req, res) => {
+      const { userId } = req.params;
+
+      const parsedFuelConsumption = parseFloat(req.body.fuelConsumption).toFixed(1);
+
+      const trip = await server.db.addTrip({
+        userId,
+        ...req.body,
+        fuelConsumption: parsedFuelConsumption,
+      });
+
+      return res.status(201).send(trip);
     },
   );
 }
 
 export default async function (fastify: FastifyInstance) {
-  fastify.register(tripsRoutes, { prefix: '/trips' });
+  fastify.register(tripsRoutes, { prefix: '/trips/:userId' });
 }

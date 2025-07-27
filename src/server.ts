@@ -21,7 +21,6 @@ export async function initServer({ dbPlugin }: ServerOptions = {}): Promise<Fast
   });
 
   server.get('/health', (req, res) => res.send('OK'));
-  server.log.info('Server initialized');
 
   await server.register(dbPlugin || inMemoryDbPlugin);
 
