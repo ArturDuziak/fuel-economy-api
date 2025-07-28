@@ -5,7 +5,7 @@ export type Trip = {
   travelTime: number; // in minutes
   distance: number; // in km
   avgSpeed: number; // in km/h
-  fuelConsumption: string; // in liters per 100km
+  fuelConsumption: number; // in liters per 100km
   startCoordinates: {
     lat: number;
     lng: number;

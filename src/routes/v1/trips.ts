@@ -45,12 +45,14 @@ async function tripsRoutes(server: FastifyInstance) {
     async (req, res) => {
       const { userId } = req.params;
 
-      const parsedFuelConsumption = parseFloat(req.body.fuelConsumption).toFixed(1);
+      const parsedFuelConsumption = Number(req.body.fuelConsumption.toFixed(1));
+      const parsedTravelTime = Number(req.body.travelTime.toFixed(0));
 
       const trip = await server.db.addTrip({
         userId,
         ...req.body,
         fuelConsumption: parsedFuelConsumption,
+        travelTime: parsedTravelTime,
       });
 
       return res.status(201).send(trip);

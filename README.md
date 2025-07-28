@@ -31,3 +31,11 @@ You can also build the server and run it:
 pnpm build
 pnpm start
 ```
+
+## Running tests
+
+Integration tests:
+
+```bash
+pnpm test:integration
+```
