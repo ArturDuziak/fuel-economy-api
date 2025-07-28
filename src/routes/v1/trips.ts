@@ -19,6 +19,7 @@ async function tripsRoutes(server: FastifyInstance) {
     {
       schema: {
         ...routeBaseSchema,
+        description: 'List all trips for a given user',
         params: UserIdParamsSchema,
         response: { 200: List.ResponseJsonSchema },
       },
@@ -37,6 +38,7 @@ async function tripsRoutes(server: FastifyInstance) {
     {
       schema: {
         ...routeBaseSchema,
+        description: 'Add a new trip for a given user',
         params: UserIdParamsSchema,
         body: Add.RequestJsonSchema,
         response: { 201: Add.ResponseJsonSchema },

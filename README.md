@@ -32,6 +32,8 @@ pnpm build
 pnpm start
 ```
 
+When server is running, you can access the swagger at `/documentation` path.
+
 ## Running tests
 
 Integration tests:
