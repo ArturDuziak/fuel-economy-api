@@ -9,4 +9,5 @@ export type AddTripParams = {
 export interface DatabaseInterface {
   getTrips: (userId: string) => Promise<Trip[]>;
   addTrip: (params: AddTripParams) => Promise<Trip>;
+  getTrip: (userId: string, tripId: string) => Promise<Trip>;
 }

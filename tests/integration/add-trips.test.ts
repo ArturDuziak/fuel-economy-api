@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, inject, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { getRandomTrip } from './fixtures';
 

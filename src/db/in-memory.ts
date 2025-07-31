@@ -3,6 +3,7 @@ import fp from 'fastify-plugin';
 import { Trip } from './types/trips';
 import { AddTripParams, DatabaseInterface, PluginName } from './interfaces';
 import { FastifyInstance } from 'fastify';
+import { NotFoundError } from './errors';
 
 export class InMemoryDatabase implements DatabaseInterface {
   private trips: Record<string, Trip[]> = {};
@@ -21,6 +22,16 @@ export class InMemoryDatabase implements DatabaseInterface {
       ...params,
     };
     this.trips[params.userId].push(trip);
+
+    return trip;
+  }
+
+  async getTrip(userId: string, tripId: string): Promise<Trip> {
+    const trip = this.trips[userId]?.find((trip) => trip.id === tripId);
+
+    if (!trip) {
+      throw new NotFoundError('Trip not found');
+    }
 
     return trip;
   }
