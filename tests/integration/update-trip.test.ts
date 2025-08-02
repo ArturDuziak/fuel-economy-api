@@ -3,8 +3,8 @@ import request from 'supertest';
 import { getRandomTrip } from './fixtures';
 import { randomUUID } from 'node:crypto';
 
-describe('Get trip', () => {
-  it('should get a trip', async () => {
+describe('Update trip', () => {
+  it('should update a trip', async () => {
     const trip = getRandomTrip();
     const userId = randomUUID();
 
@@ -15,26 +15,32 @@ describe('Get trip', () => {
 
     const tripId = response.body.id;
 
-    const getResponse = await request('http://localhost:3000').get(`/v1/trips/${userId}/${tripId}`);
+    const updatedTrip = {
+      ...trip,
+      fuelConsumption: trip.fuelConsumption + 1,
+      travelTime: trip.travelTime + 1,
+    };
 
-    expect(getResponse.status).toBe(200);
-    expect(getResponse.body).toMatchObject(trip);
+    const updateResponse = await request('http://localhost:3000').put(`/v1/trips/${userId}/${tripId}`).send(updatedTrip);
+
+    expect(updateResponse.status).toBe(200);
+    expect(updateResponse.body).toMatchObject(updatedTrip);
   });
 
   it('should return not found error if trip is not found', async () => {
     const userId = randomUUID();
     const tripId = randomUUID();
 
-    const response = await request('http://localhost:3000').get(`/v1/trips/${userId}/${tripId}`);
+    const response = await request('http://localhost:3000').put(`/v1/trips/${userId}/${tripId}`).send(getRandomTrip());
 
     expect(response.status).toBe(404);
   });
 
-  it('should not allow to fetch invalid trip id', async () => {
+  it('should not allow to update invalid trip id', async () => {
     const userId = randomUUID();
     const tripId = '12345';
 
-    const response = await request('http://localhost:3000').get(`/v1/trips/${userId}/${tripId}`);
+    const response = await request('http://localhost:3000').put(`/v1/trips/${userId}/${tripId}`).send(getRandomTrip());
 
     expect(response.status).toBe(400);
   });

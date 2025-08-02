@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { List, Add, Get } from '../../schemas/trips';
+import { List, Add, Get, Update } from '../../schemas/trips';
 import { NotFoundError } from '../../db/errors';
 
 const routeBaseSchema = {
@@ -89,6 +89,42 @@ async function tripsRoutes(server: FastifyInstance) {
       });
 
       return res.status(201).send(trip);
+    },
+  );
+
+  server.put<{ Body: Update.Request; Params: { userId: string; tripId: string } }>(
+    '/:tripId',
+    {
+      schema: {
+        ...routeBaseSchema,
+        description: 'Update a trip for a given user',
+        params: zodToJsonSchema(UserIdParamsSchema.extend({ tripId: z.string().uuid() })),
+        body: Update.RequestJsonSchema,
+        response: { 200: Update.ResponseJsonSchema },
+      },
+    },
+    async (req, res) => {
+      const { userId, tripId } = req.params;
+
+      const parsedFuelConsumption = Number(req.body.fuelConsumption.toFixed(1));
+      const parsedTravelTime = Number(req.body.travelTime.toFixed(0));
+
+      try {
+        const trip = await server.db.updateTrip({
+          userId,
+          tripId,
+          ...req.body,
+          fuelConsumption: parsedFuelConsumption,
+          travelTime: parsedTravelTime,
+        });
+
+        return res.send(trip);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          return res.status(404).send({ message: error.message });
+        }
+        throw error;
+      }
     },
   );
 }

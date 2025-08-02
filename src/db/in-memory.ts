@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { Trip } from './types/trips';
-import { AddTripParams, DatabaseInterface, PluginName } from './interfaces';
+import { AddTripParams, DatabaseInterface, PluginName, UpdateTripParams } from './interfaces';
 import { FastifyInstance } from 'fastify';
 import { NotFoundError } from './errors';
 
@@ -34,6 +34,23 @@ export class InMemoryDatabase implements DatabaseInterface {
     }
 
     return trip;
+  }
+
+  async updateTrip(params: UpdateTripParams): Promise<Trip> {
+    const trip = this.trips[params.userId]?.find((trip) => trip.id === params.tripId);
+
+    if (!trip) {
+      throw new NotFoundError('Trip not found');
+    }
+
+    const updatedTrip = {
+      ...trip,
+      ...params,
+    };
+
+    this.trips[params.userId][this.trips[params.userId].indexOf(trip)] = updatedTrip;
+
+    return updatedTrip;
   }
 }
 
