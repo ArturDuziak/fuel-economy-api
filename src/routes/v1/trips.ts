@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { List, Add, Get, Update } from '../../schemas/trips';
+import { List, Add, Get, Update, Patch } from '../../schemas/trips';
 import { NotFoundError } from '../../db/errors';
 
 const routeBaseSchema = {
@@ -18,7 +18,7 @@ const NotFoundErrorSchema = z.object({
 
 async function tripsRoutes(server: FastifyInstance) {
   server.get<{ Params: { userId: string } }>(
-    '/',
+    '',
     {
       schema: {
         ...routeBaseSchema,
@@ -65,7 +65,7 @@ async function tripsRoutes(server: FastifyInstance) {
   );
 
   server.post<{ Body: Add.Request; Params: { userId: string } }>(
-    '/',
+    '',
     {
       schema: {
         ...routeBaseSchema,
@@ -123,6 +123,49 @@ async function tripsRoutes(server: FastifyInstance) {
         if (error instanceof NotFoundError) {
           return res.status(404).send({ message: error.message });
         }
+        throw error;
+      }
+    },
+  );
+
+  server.patch<{ Body: Patch.Request; Params: { userId: string; tripId: string } }>(
+    '/:tripId',
+    {
+      schema: {
+        ...routeBaseSchema,
+        description: 'Patch a trip for a given user',
+        params: zodToJsonSchema(UserIdParamsSchema.extend({ tripId: z.string().uuid() })),
+        body: Patch.RequestJsonSchema,
+        response: { 200: Patch.ResponseJsonSchema },
+      },
+    },
+    async (req, res) => {
+      const { userId, tripId } = req.params;
+
+      const updateData = {
+        userId,
+        tripId,
+        ...req.body,
+      };
+
+      if (req.body.fuelConsumption !== undefined) {
+        updateData.fuelConsumption = Number(req.body.fuelConsumption.toFixed(1));
+      }
+
+      if (req.body.travelTime !== undefined) {
+        updateData.travelTime = Number(req.body.travelTime.toFixed(0));
+      }
+
+      try {
+        const trip = await server.db.patchTrip(updateData);
+
+        return res.send(trip);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          return res.status(404).send({ message: error.message });
+        }
+        console.error(error);
+
         throw error;
       }
     },

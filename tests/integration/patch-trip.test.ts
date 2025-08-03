@@ -6,8 +6,8 @@ import { randomUUID } from 'node:crypto';
 const serverUrl = inject('serverUrl');
 const api = request(serverUrl);
 
-describe('Update trip', () => {
-  it('should update a trip', async () => {
+describe('Patch trip', () => {
+  it('should patch a trip', async () => {
     const trip = getRandomTrip();
     const userId = randomUUID();
 
@@ -18,36 +18,40 @@ describe('Update trip', () => {
 
     const tripId = response.body.id;
 
-    const updatedTrip = {
-      ...trip,
+    const patchedTrip = {
       fuelConsumption: trip.fuelConsumption + 1,
-      travelTime: trip.travelTime + 1,
     };
 
-    const updateResponse = await api.put(`/v1/${userId}/trips/${tripId}`).send(updatedTrip);
+    const patchResponse = await api.patch(`/v1/${userId}/trips/${tripId}`).send(patchedTrip);
 
-    expect(updateResponse.status).toBe(200);
-    expect(updateResponse.body).toMatchObject(updatedTrip);
+    expect(patchResponse.status).toBe(200);
+    expect(patchResponse.body).toMatchObject({
+      ...trip,
+      ...patchedTrip,
+    });
 
-    const updatedTripResponse = await api.get(`/v1/${userId}/trips/${tripId}`);
+    const patchedTripResponse = await api.get(`/v1/${userId}/trips/${tripId}`);
 
-    expect(updatedTripResponse.body).toMatchObject(updatedTrip);
+    expect(patchedTripResponse.body).toMatchObject({
+      ...trip,
+      ...patchedTrip,
+    });
   });
 
   it('should return not found error if trip is not found', async () => {
     const userId = randomUUID();
     const tripId = randomUUID();
 
-    const response = await api.put(`/v1/${userId}/trips/${tripId}`).send(getRandomTrip());
+    const response = await api.patch(`/v1/${userId}/trips/${tripId}`).send(getRandomTrip());
 
     expect(response.status).toBe(404);
   });
 
-  it('should not allow to update invalid trip id', async () => {
+  it('should not allow to patch invalid trip id', async () => {
     const userId = randomUUID();
     const tripId = '12345';
 
-    const response = await api.put(`/v1/${userId}/trips/${tripId}`).send(getRandomTrip());
+    const response = await api.patch(`/v1/${userId}/trips/${tripId}`).send(getRandomTrip());
 
     expect(response.status).toBe(400);
   });

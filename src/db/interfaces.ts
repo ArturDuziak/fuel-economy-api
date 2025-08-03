@@ -11,9 +11,15 @@ export type UpdateTripParams = {
   tripId: string;
 } & Omit<Trip, 'id'>;
 
+export type PatchTripParams = {
+  userId: string;
+  tripId: string;
+} & Partial<Omit<Trip, 'id'>>;
+
 export interface DatabaseInterface {
   getTrips: (userId: string) => Promise<Trip[]>;
   addTrip: (params: AddTripParams) => Promise<Trip>;
   getTrip: (userId: string, tripId: string) => Promise<Trip>;
   updateTrip: (params: UpdateTripParams) => Promise<Trip>;
+  patchTrip: (params: PatchTripParams) => Promise<Trip>;
 }
