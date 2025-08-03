@@ -1,12 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, inject } from 'vitest';
 import request from 'supertest';
 import { getRandomTrip } from './fixtures';
+
+const serverUrl = inject('serverUrl');
+const api = request(serverUrl);
 
 describe('Add trips', () => {
   it('should add a trip', async () => {
     const trip = getRandomTrip();
 
-    const response = await request('http://localhost:3000').post('/v1/trips/00000000-0000-0000-0000-000000000000/add').send(trip);
+    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send(trip);
 
     expect(response.status).toBe(201);
 
@@ -19,14 +22,12 @@ describe('Add trips', () => {
   it('should transform valid number string to number', async () => {
     const trip = getRandomTrip();
 
-    const response = await request('http://localhost:3000')
-      .post('/v1/trips/00000000-0000-0000-0000-000000000000/add')
-      .send({
-        ...trip,
-        fuelConsumption: '5.5',
-        distance: '100',
-        travelTime: '60.4',
-      });
+    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+      ...trip,
+      fuelConsumption: '5.5',
+      distance: '100',
+      travelTime: '60.4',
+    });
 
     expect(response.status).toBe(201);
 
@@ -38,12 +39,10 @@ describe('Add trips', () => {
   it('should not add a trip with fuel consumption passed as string', async () => {
     const trip = getRandomTrip();
 
-    const response = await request('http://localhost:3000')
-      .post('/v1/trips/00000000-0000-0000-0000-000000000000/add')
-      .send({
-        ...trip,
-        fuelConsumption: '5.5abc',
-      });
+    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+      ...trip,
+      fuelConsumption: '5.5abc',
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('body/fuelConsumption must be number');
@@ -52,12 +51,10 @@ describe('Add trips', () => {
   it('should not add a trip with too high fuel consumption', async () => {
     const trip = getRandomTrip();
 
-    const response = await request('http://localhost:3000')
-      .post('/v1/trips/00000000-0000-0000-0000-000000000000/add')
-      .send({
-        ...trip,
-        fuelConsumption: 111.1,
-      });
+    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+      ...trip,
+      fuelConsumption: 111.1,
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('body/fuelConsumption must be <= 100');
@@ -66,12 +63,10 @@ describe('Add trips', () => {
   it('should not add a trip with negative fuel consumption', async () => {
     const trip = getRandomTrip();
 
-    const response = await request('http://localhost:3000')
-      .post('/v1/trips/00000000-0000-0000-0000-000000000000/add')
-      .send({
-        ...trip,
-        fuelConsumption: -1.1,
-      });
+    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+      ...trip,
+      fuelConsumption: -1.1,
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('body/fuelConsumption must be >= 0');

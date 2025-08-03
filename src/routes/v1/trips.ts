@@ -18,7 +18,7 @@ const NotFoundErrorSchema = z.object({
 
 async function tripsRoutes(server: FastifyInstance) {
   server.get<{ Params: { userId: string } }>(
-    '/list',
+    '/',
     {
       schema: {
         ...routeBaseSchema,
@@ -65,7 +65,7 @@ async function tripsRoutes(server: FastifyInstance) {
   );
 
   server.post<{ Body: Add.Request; Params: { userId: string } }>(
-    '/add',
+    '/',
     {
       schema: {
         ...routeBaseSchema,
@@ -130,5 +130,5 @@ async function tripsRoutes(server: FastifyInstance) {
 }
 
 export default async function (fastify: FastifyInstance) {
-  fastify.register(tripsRoutes, { prefix: '/trips/:userId' });
+  fastify.register(tripsRoutes, { prefix: '/:userId/trips' });
 }
