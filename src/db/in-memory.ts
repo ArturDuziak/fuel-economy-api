@@ -1,13 +1,21 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes, scryptSync } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { Trip } from './types/trips';
-import { AddTripParams, DatabaseInterface, PatchTripParams, PluginName, UpdateTripParams } from './interfaces';
+import { AddTripParams, CreateUserParams, DatabaseInterface, PatchTripParams, PluginName, UpdateTripParams } from './interfaces';
 import { FastifyInstance } from 'fastify';
-import { NotFoundError } from './errors';
+import { ConflictError, NotFoundError } from './errors';
+import { User } from './types/user';
+
+function hashPassword(plainTextPassword: string): string {
+  const salt = randomBytes(16).toString('hex');
+  const derivedKey = scryptSync(plainTextPassword, salt, 64).toString('hex');
+
+  return `${salt}:${derivedKey}`;
+}
 
 export class InMemoryDatabase implements DatabaseInterface {
   private trips: Record<string, Trip[]> = {};
-
+  private users: Record<string, User> = {};
   async getTrips(userId: string): Promise<Trip[]> {
     return this.trips[userId] ?? [];
   }
@@ -68,6 +76,22 @@ export class InMemoryDatabase implements DatabaseInterface {
     this.trips[params.userId][this.trips[params.userId].indexOf(trip)] = updatedTrip;
 
     return updatedTrip;
+  }
+
+  async createUser(params: CreateUserParams): Promise<User> {
+    if (this.users[params.email]) {
+      throw new ConflictError('User already exists');
+    }
+
+    const user = {
+      id: randomUUID(),
+      email: params.email,
+      passwordHash: hashPassword(params.password),
+    };
+
+    this.users[user.id] = user;
+
+    return user;
   }
 }
 
