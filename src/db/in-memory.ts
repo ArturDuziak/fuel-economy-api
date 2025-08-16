@@ -1,17 +1,11 @@
-import { randomUUID, randomBytes, scryptSync } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import fp from 'fastify-plugin';
 import { Trip } from './types/trips';
 import { AddTripParams, CreateUserParams, DatabaseInterface, PatchTripParams, PluginName, UpdateTripParams } from './interfaces';
 import { FastifyInstance } from 'fastify';
 import { ConflictError, NotFoundError } from './errors';
 import { User } from './types/user';
-
-function hashPassword(plainTextPassword: string): string {
-  const salt = randomBytes(16).toString('hex');
-  const derivedKey = scryptSync(plainTextPassword, salt, 64).toString('hex');
-
-  return `${salt}:${derivedKey}`;
-}
+import { hashPassword } from '../utils/crypto';
 
 export class InMemoryDatabase implements DatabaseInterface {
   private trips: Record<string, Trip[]> = {};
@@ -90,6 +84,16 @@ export class InMemoryDatabase implements DatabaseInterface {
     };
 
     this.users[user.id] = user;
+
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User> {
+    const user = Object.values(this.users).find((user) => user.email === email);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
 
     return user;
   }

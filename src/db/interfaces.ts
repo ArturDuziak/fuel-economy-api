@@ -30,4 +30,5 @@ export interface DatabaseInterface {
   patchTrip: (params: PatchTripParams) => Promise<Trip>;
 
   createUser: (params: CreateUserParams) => Promise<User>;
+  getUserByEmail: (email: string) => Promise<User>;
 }

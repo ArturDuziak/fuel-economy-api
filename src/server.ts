@@ -5,6 +5,7 @@ import authRoutes from './routes/v1/auth';
 import inMemoryDbPlugin from './db/in-memory';
 import { DatabaseInterface } from './db/interfaces';
 import { FastifyPluginAsync } from 'fastify';
+import assert from 'node:assert';
 
 type ServerOptions = {
   dbPlugin?: FastifyPluginAsync;
@@ -17,6 +18,11 @@ declare module 'fastify' {
 }
 
 export async function initServer({ dbPlugin }: ServerOptions = {}): Promise<FastifyInstance> {
+  assert(process.env.JWT_SECRET, 'JWT_SECRET is not set');
+  assert(process.env.JWT_TOKEN_EXPIRE_TIME, 'JWT_TOKEN_EXPIRE_TIME is not set');
+  assert(process.env.JWT_REFRESH_TOKEN_EXPIRE_TIME, 'JWT_REFRESH_TOKEN_EXPIRE_TIME is not set');
+  assert(process.env.JWT_REFRESH_TOKEN_SECRET, 'JWT_REFRESH_TOKEN_SECRET is not set');
+
   const server = fastify({
     loggerInstance: logger as FastifyBaseLogger,
   });
