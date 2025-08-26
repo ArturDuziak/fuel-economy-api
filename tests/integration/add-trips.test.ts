@@ -1,15 +1,19 @@
-import { describe, it, expect, inject } from 'vitest';
-import request from 'supertest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { getRandomTrip } from './fixtures';
-
-const serverUrl = inject('serverUrl');
-const api = request(serverUrl);
+import { AuthenticatedAgent, createAuthenticatedTestUser } from './helpers';
 
 describe('Add trips', () => {
+  let api: AuthenticatedAgent;
+
+  beforeEach(async () => {
+    const { authenticatedAgent } = await createAuthenticatedTestUser();
+    api = authenticatedAgent;
+  });
+
   it('should add a trip', async () => {
     const trip = getRandomTrip();
 
-    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send(trip);
+    const response = await api.post('/v1/trips').send(trip);
 
     expect(response.status).toBe(201);
 
@@ -22,7 +26,7 @@ describe('Add trips', () => {
   it('should transform valid number string to number', async () => {
     const trip = getRandomTrip();
 
-    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+    const response = await api.post('/v1/trips').send({
       ...trip,
       fuelConsumption: '5.5',
       distance: '100',
@@ -39,7 +43,7 @@ describe('Add trips', () => {
   it('should not add a trip with fuel consumption passed as string', async () => {
     const trip = getRandomTrip();
 
-    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+    const response = await api.post('/v1/trips').send({
       ...trip,
       fuelConsumption: '5.5abc',
     });
@@ -51,7 +55,7 @@ describe('Add trips', () => {
   it('should not add a trip with too high fuel consumption', async () => {
     const trip = getRandomTrip();
 
-    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+    const response = await api.post('/v1/trips').send({
       ...trip,
       fuelConsumption: 111.1,
     });
@@ -63,7 +67,7 @@ describe('Add trips', () => {
   it('should not add a trip with negative fuel consumption', async () => {
     const trip = getRandomTrip();
 
-    const response = await api.post('/v1/00000000-0000-0000-0000-000000000000/trips').send({
+    const response = await api.post('/v1/trips').send({
       ...trip,
       fuelConsumption: -1.1,
     });

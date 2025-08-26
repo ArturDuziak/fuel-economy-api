@@ -65,7 +65,7 @@ async function tripsRoutes(server: FastifyInstance) {
     },
   );
 
-  server.post<{ Body: Add.Request; Params: { userId: string } }>(
+  server.post<{ Body: Add.Request }>(
     '',
     {
       ...config,
@@ -77,7 +77,7 @@ async function tripsRoutes(server: FastifyInstance) {
       },
     },
     async (req, res) => {
-      const { userId } = req.params;
+      const userId = req.tokenInfo.userId;
 
       const parsedFuelConsumption = Number(req.body.fuelConsumption.toFixed(1));
       const parsedTravelTime = Number(req.body.travelTime.toFixed(0));

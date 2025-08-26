@@ -1,18 +1,21 @@
-import { describe, it, expect, inject } from 'vitest';
-import request from 'supertest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { getRandomTrip } from './fixtures';
 import { randomUUID } from 'node:crypto';
-
-const serverUrl = inject('serverUrl');
-const api = request(serverUrl);
+import { AuthenticatedAgent, createAuthenticatedTestUser } from './helpers';
 
 describe('Patch trip', () => {
+  let api: AuthenticatedAgent;
+
+  beforeEach(async () => {
+    const { authenticatedAgent } = await createAuthenticatedTestUser();
+    api = authenticatedAgent;
+  });
+
   it('should patch a trip', async () => {
     const trip = getRandomTrip();
-    const userId = randomUUID();
 
     // TODO: Create this in DB or create a helper
-    const response = await api.post(`/v1/${userId}/trips`).send(trip);
+    const response = await api.post(`/v1/trips`).send(trip);
 
     expect(response.status).toBe(201);
 
@@ -22,7 +25,7 @@ describe('Patch trip', () => {
       fuelConsumption: trip.fuelConsumption + 1,
     };
 
-    const patchResponse = await api.patch(`/v1/${userId}/trips/${tripId}`).send(patchedTrip);
+    const patchResponse = await api.patch(`/v1/trips/${tripId}`).send(patchedTrip);
 
     expect(patchResponse.status).toBe(200);
     expect(patchResponse.body).toMatchObject({
@@ -30,7 +33,7 @@ describe('Patch trip', () => {
       ...patchedTrip,
     });
 
-    const patchedTripResponse = await api.get(`/v1/${userId}/trips/${tripId}`);
+    const patchedTripResponse = await api.get(`/v1/trips/${tripId}`);
 
     expect(patchedTripResponse.body).toMatchObject({
       ...trip,
@@ -39,19 +42,17 @@ describe('Patch trip', () => {
   });
 
   it('should return not found error if trip is not found', async () => {
-    const userId = randomUUID();
     const tripId = randomUUID();
 
-    const response = await api.patch(`/v1/${userId}/trips/${tripId}`).send(getRandomTrip());
+    const response = await api.patch(`/v1/trips/${tripId}`).send(getRandomTrip());
 
     expect(response.status).toBe(404);
   });
 
   it('should not allow to patch invalid trip id', async () => {
-    const userId = randomUUID();
     const tripId = '12345';
 
-    const response = await api.patch(`/v1/${userId}/trips/${tripId}`).send(getRandomTrip());
+    const response = await api.patch(`/v1/trips/${tripId}`).send(getRandomTrip());
 
     expect(response.status).toBe(400);
   });
