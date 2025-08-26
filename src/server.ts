@@ -3,6 +3,7 @@ import { logger } from './logger';
 import tripsRoutes from './routes/v1/trips';
 import authRoutes from './routes/v1/auth';
 import inMemoryDbPlugin from './db/in-memory';
+import jwtAuthPlugin from './plugins/jwt-auth';
 import { DatabaseInterface } from './db/interfaces';
 import { FastifyPluginAsync } from 'fastify';
 import assert from 'node:assert';
@@ -79,6 +80,7 @@ export async function initServer({ dbPlugin }: ServerOptions = {}): Promise<Fast
   );
 
   await server.register(dbPlugin || inMemoryDbPlugin);
+  await server.register(jwtAuthPlugin);
 
   await server.register(tripsRoutes, { prefix: '/v1' });
   await server.register(authRoutes, { prefix: '/v1' });

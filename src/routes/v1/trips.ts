@@ -4,31 +4,31 @@ import zodToJsonSchema from 'zod-to-json-schema';
 import { List, Add, Get, Update, Patch } from '../../schemas/trips';
 import { NotFoundError } from '../../db/errors';
 
-const routeBaseSchema = {
-  tags: ['Trips'],
-};
-
-const UserIdParamsSchema = z.object({
-  userId: z.string().uuid(),
-});
-
 const NotFoundErrorSchema = z.object({
   message: z.string(),
 });
 
 async function tripsRoutes(server: FastifyInstance) {
-  server.get<{ Params: { userId: string } }>(
+  const config = {
+    preHandler: [server.verifyJwtAuth],
+  };
+
+  const routeBaseSchema = {
+    tags: ['Trips'],
+  };
+
+  server.get(
     '',
     {
+      ...config,
       schema: {
         ...routeBaseSchema,
         description: 'List all trips for a given user',
-        params: zodToJsonSchema(UserIdParamsSchema),
         response: { 200: List.ResponseJsonSchema },
       },
     },
     async (req, res) => {
-      const { userId } = req.params;
+      const userId = req.tokenInfo.userId;
 
       const trips = await server.db.getTrips(userId);
 
@@ -36,13 +36,14 @@ async function tripsRoutes(server: FastifyInstance) {
     },
   );
 
-  server.get<{ Params: { userId: string; tripId: string } }>(
+  server.get<{ Params: { tripId: string } }>(
     '/:tripId',
     {
+      ...config,
       schema: {
         ...routeBaseSchema,
         description: 'Get a trip for a given user',
-        params: zodToJsonSchema(UserIdParamsSchema.extend({ tripId: z.string().uuid() })),
+        params: zodToJsonSchema(z.object({ tripId: z.string().uuid() })),
         response: {
           200: Get.ResponseJsonSchema,
           404: zodToJsonSchema(NotFoundErrorSchema),
@@ -50,10 +51,10 @@ async function tripsRoutes(server: FastifyInstance) {
       },
     },
     async (req, res) => {
-      const { userId, tripId } = req.params;
+      const { tripId } = req.params;
 
       try {
-        const trip = await server.db.getTrip(userId, tripId);
+        const trip = await server.db.getTrip(req.tokenInfo.userId, tripId);
         return res.send(trip);
       } catch (error) {
         if (error instanceof NotFoundError) {
@@ -67,10 +68,10 @@ async function tripsRoutes(server: FastifyInstance) {
   server.post<{ Body: Add.Request; Params: { userId: string } }>(
     '',
     {
+      ...config,
       schema: {
         ...routeBaseSchema,
         description: 'Add a new trip for a given user',
-        params: zodToJsonSchema(UserIdParamsSchema),
         body: Add.RequestJsonSchema,
         response: { 201: Add.ResponseJsonSchema },
       },
@@ -92,26 +93,27 @@ async function tripsRoutes(server: FastifyInstance) {
     },
   );
 
-  server.put<{ Body: Update.Request; Params: { userId: string; tripId: string } }>(
+  server.put<{ Body: Update.Request; Params: { tripId: string } }>(
     '/:tripId',
     {
+      ...config,
       schema: {
         ...routeBaseSchema,
         description: 'Update a trip for a given user',
-        params: zodToJsonSchema(UserIdParamsSchema.extend({ tripId: z.string().uuid() })),
+        params: zodToJsonSchema(z.object({ tripId: z.string().uuid() })),
         body: Update.RequestJsonSchema,
         response: { 200: Update.ResponseJsonSchema },
       },
     },
     async (req, res) => {
-      const { userId, tripId } = req.params;
+      const { tripId } = req.params;
 
       const parsedFuelConsumption = Number(req.body.fuelConsumption.toFixed(1));
       const parsedTravelTime = Number(req.body.travelTime.toFixed(0));
 
       try {
         const trip = await server.db.updateTrip({
-          userId,
+          userId: req.tokenInfo.userId,
           tripId,
           ...req.body,
           fuelConsumption: parsedFuelConsumption,
@@ -128,22 +130,23 @@ async function tripsRoutes(server: FastifyInstance) {
     },
   );
 
-  server.patch<{ Body: Patch.Request; Params: { userId: string; tripId: string } }>(
+  server.patch<{ Body: Patch.Request; Params: { tripId: string } }>(
     '/:tripId',
     {
+      ...config,
       schema: {
         ...routeBaseSchema,
         description: 'Patch a trip for a given user',
-        params: zodToJsonSchema(UserIdParamsSchema.extend({ tripId: z.string().uuid() })),
+        params: zodToJsonSchema(z.object({ tripId: z.string().uuid() })),
         body: Patch.RequestJsonSchema,
         response: { 200: Patch.ResponseJsonSchema },
       },
     },
     async (req, res) => {
-      const { userId, tripId } = req.params;
+      const { tripId } = req.params;
 
       const updateData = {
-        userId,
+        userId: req.tokenInfo.userId,
         tripId,
         ...req.body,
       };
@@ -173,5 +176,5 @@ async function tripsRoutes(server: FastifyInstance) {
 }
 
 export default async function (fastify: FastifyInstance) {
-  fastify.register(tripsRoutes, { prefix: '/:userId/trips' });
+  fastify.register(tripsRoutes, { prefix: '/trips' });
 }
